@@ -1,6 +1,7 @@
-import urllib.request, sys,base64,json,os,time,baiduSearch
+import urllib.request, sys,base64,json,os,time,string,re
 from PIL import Image
 from aip import AipOcr
+from aitext import Ai
 
 start = time.time()
 os.system("adb shell /system/bin/screencap -p /sdcard/screenshot.png") 
@@ -16,9 +17,9 @@ bodys = {}
 url = host + path + '?' + querys
 '''
 """ （百度ocr）你的 APPID AK SK """
-APP_ID = '10673785'
-API_KEY = 'FqRvrpPwhSNXt2FhT6d3dXfc'
-SECRET_KEY = 'UIu2qOPHXENScjr1yzAyXQgNkLQzkcdc'
+APP_ID = '10670003'
+API_KEY = 'ItGv9RxnTiNMoax0SUkiGHYZ'
+SECRET_KEY = 'gGVUSPIcQranroBWhwBqLO9Hmg6zPTSn'
 client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
 
 
@@ -30,7 +31,7 @@ w = im.size[0]
 h = im.size[1]
 print("xx:{}".format(img_size))
 
-region = im.crop((70,200, w-70,700))    #裁剪的区域
+region = im.crop((70,200, w-70,1200))    #裁剪的区域
 region.save(r"./crop_test1.png")
 
 
@@ -40,16 +41,38 @@ def get_file_content(filePath):
     with open(filePath, 'rb') as fp:
         return fp.read()
 image = get_file_content(r"./crop_test1.png")
-respon = client.basicGeneral(image)
+respon = client.basicGeneral(image)   #用完500次后可改 respon = client.basicAccurate(image) 这个还可用50次 
 titles = respon['words_result']          #获取问题
-ans = ''
+issue = ''
+answer = ['','','','','','']
+countone = 0
+answercount = 0
 for title in titles:
-      ans = ans +title['words']
+      countone+=1
+      if(countone >=len(titles)-2):
+        answer[answercount] = title['words']
+        answercount+=1
+      else:
+        issue = issue +title['words']
 
-print(ans)       #打印问题
 
-keyword = ans    #识别的问题文本
+tissue = issue[1:2]
+if str.isdigit(tissue):            #去掉题目索引
+     issue = issue[3:]   
+else:
+     issue = issue[2:]
 
+print(issue)       #打印问题
+print('  A:'+answer[0]+' B:'+answer[1]+' C:'+answer[2])       #打印答案
+
+
+keyword = issue    #识别的问题文本
+
+ai=Ai(issue,answer)
+
+ai.search()
+
+'''
 convey = 'n'
 
 if convey == 'y' or convey == 'Y':
@@ -66,6 +89,6 @@ for result in results:
 	count=count+1
 	if(count == 2):      #这里限制了只显示2条结果，可以自己设置
 		break
-
+'''
 end = time.time()
 print('程序用时：'+str(end-start)+'秒')
